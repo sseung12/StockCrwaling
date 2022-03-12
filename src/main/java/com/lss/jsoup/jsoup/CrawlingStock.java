@@ -15,9 +15,31 @@ import java.util.List;
 
 public class CrawlingStock {
 
-    public Stock Crawling() throws IOException {
+    public String getStockCode(String name) {
+        String code="";
 
-        String url = "https://invest.zum.com/domestic/item/035720?query=%EC%B9%B4%EC%B9%B4%EC%98%A4&r=1&qm=g_suggest.finanace";
+        String url = "https://search.naver.com/search.naver?query="+name;
+        Document doc;
+        try {
+            doc = Jsoup.connect(url).get();
+            String text = doc.selectFirst("em.t_nm").text();
+            System.out.println(text);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+        return code;
+    }
+
+
+
+    public Stock Crawling(String code) throws IOException {
+
+        String url = "https://invest.zum.com/domestic/item/035720?query="+code;
+
         Stock stock = null;
         Document doc;
         List<String> result = new ArrayList<>();
@@ -47,6 +69,7 @@ public class CrawlingStock {
                     .low_Price(result.get(2))
                     .net_Change(result.get(3))
                     .volume(result.get(4))
+                    .rate(per)
                     .date(LocalDate.now())
                     .build();
 
@@ -58,5 +81,10 @@ public class CrawlingStock {
         return stock;
     }
 
+    public static void main(String[] args) throws IOException {
+        CrawlingStock c = new CrawlingStock();
+        String code = c.getStockCode("카카오");
+        c.Crawling(code);
+    }
 
 }
