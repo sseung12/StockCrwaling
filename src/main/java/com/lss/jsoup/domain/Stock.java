@@ -1,20 +1,32 @@
 package com.lss.jsoup.domain;
 
+import lombok.Builder;
+
 import java.time.LocalDate;
 
+@Builder
 public class Stock {
 
     private LocalDate date;
 
-    private String open_price;
+    //종가
+    private String open_Price;
 
-    private String close_price;
+    //시가
+    private String close_Price;
 
+    //등락률
     private String rate;
 
-    private String high_price;
+    //고가
+    private String high_Price;
 
-    private String low_price;
+    //저가
+    private String low_Price;
 
-//    private String
+    //거래량
+    private String volume;
+
+    //전일대비
+    private String net_Change;
 }
