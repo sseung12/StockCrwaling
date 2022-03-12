@@ -1,11 +1,15 @@
 package com.lss.jsoup.domain;
 
 import lombok.Builder;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
+@ToString
 @Builder
 public class Stock {
+
+    private String name;
 
     private LocalDate date;
 
