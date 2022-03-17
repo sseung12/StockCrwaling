@@ -1,18 +1,16 @@
 package com.lss.jsoup.jsoup;
 
 import com.lss.jsoup.domain.Stock;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.thymeleaf.templateparser.reader.ParserLevelCommentTextReader;
-
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
+@Slf4j
 public class CrawlingStock {
 
     public String getStockCode(String name) {
@@ -23,13 +21,10 @@ public class CrawlingStock {
         try {
             doc = Jsoup.connect(url).get();
             String text = doc.selectFirst("em.t_nm").text();
-            System.out.println(text);
-
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-
-
 
         return code;
     }
@@ -38,6 +33,9 @@ public class CrawlingStock {
 
     public Stock Crawling(String code) throws IOException {
 
+        if (code == null) {
+            return null;
+        }
         String url = "https://invest.zum.com/domestic/item/035720?query="+code;
 
         Stock stock = null;
@@ -49,31 +47,28 @@ public class CrawlingStock {
 
             Element title = doc.selectFirst("div.stock_board");
 
-            String name = title.selectFirst("a").text();
-            String price = title.selectFirst("span.price").text();
-            String point = title.selectFirst("span.point").text();
-            String per = title.selectFirst("span.per").text();
+            // board에 있는 데이터
+            Map<String, String> board = board(title);
 
-
+            // sidebar 데이터
             Element info = doc.selectFirst("ul[data-v-d2826eb4]");
             Elements select = info.select("span.data");
 
-
             for (Element element : select) {
-                result.add(element.text().replaceAll(",", ""));
+                result.add(subSpecialWord(element.text()));
             }
-
 
             stock = Stock.builder().close_Price(result.get(0))
                     .high_Price(result.get(1))
                     .low_Price(result.get(2))
                     .net_Change(result.get(3))
                     .volume(result.get(4))
-                    .rate(per)
+                    .name(board.get("name"))
+                    .rate(board.get("rate"))
+                    .price(board.get("price"))
+                    .point(board.get("point"))
                     .date(LocalDate.now())
                     .build();
-
-            System.out.println(stock);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -81,10 +76,23 @@ public class CrawlingStock {
         return stock;
     }
 
+    public Map<String, String> board(Element title) {
+        Map<String,String> result = new HashMap<>();
+        result.put("name",subSpecialWord(title.selectFirst("a").text()));
+        result.put("price",subSpecialWord(title.selectFirst("span.price").text()));
+        result.put("point",subSpecialWord(title.selectFirst("span.point").text()));
+        result.put("rate",subSpecialWord(title.selectFirst("span.per").text()));
+        return result;
+    }
+
+    public String subSpecialWord(String str) {
+        return str.replaceAll("[(),]","");
+    }
     public static void main(String[] args) throws IOException {
         CrawlingStock c = new CrawlingStock();
         String code = c.getStockCode("카카오");
-        c.Crawling(code);
+        Stock crawling = c.Crawling(code);
+        System.out.println(crawling);
     }
 
 }
